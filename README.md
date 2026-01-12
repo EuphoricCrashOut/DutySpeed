@@ -2,8 +2,6 @@
 
 **DutySpeed** is a lightweight, automated speedrun timer for Final Fantasy XIV. It helps you track the time it took to complete dungeons, trials, and raids without needing to manually start or stop a stopwatch.
 
-![DutySpeed Icon](https://raw.githubusercontent.com/YourUsername/DutySpeed/main/icon.png)
-
 ## Features
 * **Automatic Detection**: Starts the timer the moment the "Duty Commenced" message appears.
 * **Top 5 History**: Maintains a local leaderboard for every unique duty you run.
