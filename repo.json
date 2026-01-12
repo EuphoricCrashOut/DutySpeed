@@ -1,0 +1,11 @@
+[
+  {
+    "Author": "EuphoricCrashOut",
+    "Name": "DutySpeed",
+    "InternalName": "DutySpeed",
+    "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
+    "ApplicableTarget": "ffxiv",
+    "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
+    "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/download/v1.0/DutySpeed.zip"
+  }
+]
