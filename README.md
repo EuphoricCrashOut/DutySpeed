@@ -13,4 +13,4 @@
 * `/ds` or `/dutyspeed` - Toggles the timer window.
 
 ---
-*Disclaimer: This plugin is not affiliated with Square Enix. Use at your own risk.*
+*Disclaimer: This plugin is not affiliated with Square Enix. Use at your own risk. Please just have fun with it.*
