@@ -5,7 +5,7 @@
   "Description": "Automatically tracks your completion time in duties",
   "InternalName": "DutySpeed",
   "AssemblyVersion": "1.0.0.0",
-  "RepoUrl": "",
+  "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
   "ApplicableTarget": "ffxiv",
   "MainControl": "DutySpeed.Plugin, DutySpeed",
   "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
