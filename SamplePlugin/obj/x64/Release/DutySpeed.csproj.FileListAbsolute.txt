@@ -1,0 +1,15 @@
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\DutySpeed.deps.json
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\DutySpeed.dll
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\ImGui.NET.dll
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\runtimes\linux-x64\native\libcimgui.so
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\runtimes\osx\native\libcimgui.dylib
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\runtimes\win-arm64\native\cimgui.dll
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\runtimes\win-x64\native\cimgui.dll
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\bin\x64\Release\runtimes\win-x86\native\cimgui.dll
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.csproj.AssemblyReference.cache
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.GeneratedMSBuildEditorConfig.editorconfig
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.AssemblyInfoInputs.cache
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.AssemblyInfo.cs
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.csproj.CoreCompileInputs.cache
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.csproj.Up2Date
+D:\FFXIV-ModAttempt\SamplePlugin-master\SamplePlugin-master\SamplePlugin\obj\x64\Release\DutySpeed.dll

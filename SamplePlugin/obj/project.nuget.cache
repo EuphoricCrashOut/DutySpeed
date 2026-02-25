@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "HCw4JrcTR2U=",
+  "success": true,
+  "projectFilePath": "D:\\FFXIV-ModAttempt\\SamplePlugin-master\\SamplePlugin-master\\SamplePlugin\\DutySpeed.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Strikes\\.nuget\\packages\\dalamudpackager\\14.0.1\\dalamudpackager.14.0.1.nupkg.sha512",
+    "C:\\Users\\Strikes\\.nuget\\packages\\dotnet.reproduciblebuilds\\1.2.39\\dotnet.reproduciblebuilds.1.2.39.nupkg.sha512",
+    "C:\\Users\\Strikes\\.nuget\\packages\\imgui.net\\1.91.6.1\\imgui.net.1.91.6.1.nupkg.sha512"
+  ],
+  "logs": []
+}
