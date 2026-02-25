@@ -1,0 +1,11 @@
+# Visual Studio junk
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.cache
+
+# Dalamud specific
+*.pdb
+*.dll
