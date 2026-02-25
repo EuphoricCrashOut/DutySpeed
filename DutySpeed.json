@@ -7,7 +7,7 @@
   "AssemblyVersion": "1.0.0.0",
   "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
   "ApplicableTarget": "ffxiv",
-  "MainControl": "DutySpeed.Plugin",
+  "MainControl": "DutySpeed.Plugin,DutySpeed",
   "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
   "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
   "ApplicableVersion": "any",
