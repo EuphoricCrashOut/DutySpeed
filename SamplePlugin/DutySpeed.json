@@ -1,0 +1,16 @@
+{
+    "Author": "EuphoricCrashOut",
+    "Name": "DutySpeed",
+    "InternalName": "DutySpeed",
+    "Punchline": "Automated duty timer with party history.",
+    "Description": "Automatically tracks your time in duties and saves a history of your top 5 runs, including party composition and job data.",
+    "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
+    "ApplicableTarget": "ffxiv",
+    "MainControl": "DutySpeed.Plugin",
+    "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
+    "Tags": [
+        "timer",
+        "speedrun",
+        "duty"
+    ]
+}

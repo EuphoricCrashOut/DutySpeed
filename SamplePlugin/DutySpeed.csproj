@@ -1,0 +1,22 @@
+﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
+    <PropertyGroup>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <Platforms>x64</Platforms>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackageId>DutySpeed</PackageId>
+        <Version>1.0.0.0</Version>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <Compile Remove="Configuration.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Update="DalamudPackager" Version="14.0.1" />
+    </ItemGroup>
+</Project>
