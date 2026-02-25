@@ -8,7 +8,7 @@
 * **Party Tracking**: Records who you ran with and what jobs they played (hover over history to view).
 * **Auto-Open**: Optionally pops the window open only when you enter an instance.
 * **Record Browser**: View your personal bests for any dungeon even while standing in town.
-* 
+* GLHF - May you have quick and painless runs.
 ## Commands
 * `/ds` or `/dutyspeed` - Toggles the timer window.
 
