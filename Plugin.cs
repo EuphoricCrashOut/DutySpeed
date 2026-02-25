@@ -1,4 +1,8 @@
-using Dalamud.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Windowing;
@@ -6,13 +10,9 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Numerics;
 using ImGui = Dalamud.Bindings.ImGui.ImGui;
 using ImGuiWindowFlags = Dalamud.Bindings.ImGui.ImGuiWindowFlags;
+using Dalamud.Configuration;
 
 namespace DutySpeed;
 
@@ -21,6 +21,7 @@ public class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
     public List<DutyRecord> RunHistory { get; set; } = new();
+    public HashSet<string> HiddenDuties { get; set; } = new();
     public bool AutoOpenOnDuty { get; set; } = true;
 
     public void Save() => Plugin.PluginInterface.SavePluginConfig(this);
@@ -34,6 +35,7 @@ public class PartyMember
 
 public class DutyRecord
 {
+    public Guid Id { get; set; } = Guid.NewGuid(); // Added Unique ID for precise deletion
     public string Name { get; set; } = string.Empty;
     public TimeSpan Time { get; set; }
     public DateTime Date { get; set; }
@@ -56,8 +58,6 @@ public sealed class Plugin : IDalamudPlugin
     public Stopwatch DutyTimer { get; } = new();
     public bool IsRunning { get; private set; } = false;
     public HashSet<uint> DefeatedBossIds { get; } = new();
-    public string LastSplitName { get; set; } = "None";
-    public TimeSpan LastSplitTime { get; set; }
 
     public string CurrentDutyName { get; set; } = "Not in Duty";
     private string cachedDutyName = "Unknown Duty";
@@ -70,6 +70,8 @@ public sealed class Plugin : IDalamudPlugin
     public Plugin()
     {
         Config = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Config.HiddenDuties ??= new HashSet<string>();
+
         timerWindow = new TimerWindow(this);
         windowSystem.AddWindow(timerWindow);
 
@@ -107,7 +109,7 @@ public sealed class Plugin : IDalamudPlugin
         DutyTimer.Restart();
         IsRunning = true;
         DefeatedBossIds.Clear();
-        LastSplitName = "Started";
+        SelectedHistoryDuty = cachedDutyName;
         if (Config.AutoOpenOnDuty) timerWindow.IsOpen = true;
     }
 
@@ -126,20 +128,23 @@ public sealed class Plugin : IDalamudPlugin
                 Party = GetCurrentParty()
             };
             Config.RunHistory.Add(record);
+            Config.HiddenDuties.Remove(cachedDutyName);
             Config.Save();
-            ChatGui.Print($"[DutySpeed] {cachedDutyName} saved: {DutyTimer.Elapsed:mm\\:ss}");
+            SelectedHistoryDuty = cachedDutyName;
         }
     }
 
     private List<PartyMember> GetCurrentParty()
     {
         var members = new List<PartyMember>();
-        if (PartyList.Length == 0 && ClientState.LocalPlayer != null)
+        var localPlayer = ObjectTable.LocalPlayer;
+
+        if (PartyList.Length == 0 && localPlayer != null)
         {
             members.Add(new PartyMember
             {
-                Name = ClientState.LocalPlayer.Name.TextValue,
-                Job = ClientState.LocalPlayer.ClassJob.Value.Abbreviation.ExtractText()
+                Name = localPlayer.Name.TextValue,
+                Job = localPlayer.ClassJob.Value.Abbreviation.ExtractText()
             });
         }
         else
@@ -165,8 +170,6 @@ public sealed class Plugin : IDalamudPlugin
                 if (character.StatusFlags.HasFlag(StatusFlags.Hostile))
                 {
                     DefeatedBossIds.Add(character.EntityId);
-                    LastSplitName = character.Name.TextValue;
-                    LastSplitTime = DutyTimer.Elapsed;
                 }
             }
         }
@@ -185,11 +188,13 @@ public sealed class Plugin : IDalamudPlugin
 public class TimerWindow : Window
 {
     private readonly Plugin plugin;
+    private bool showHiddenSelection = false;
+    private Guid? deleteConfirmId = null; // Track which record is pending deletion
 
     public TimerWindow(Plugin plugin) : base("DutySpeed Timer###DutySpeedMain")
     {
         this.plugin = plugin;
-        this.SizeConstraints = new WindowSizeConstraints { MinimumSize = new Vector2(250, 150), MaximumSize = new Vector2(400, 600) };
+        this.SizeConstraints = new WindowSizeConstraints { MinimumSize = new Vector2(250, 200), MaximumSize = new Vector2(400, 800) };
         this.Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -216,22 +221,44 @@ public class TimerWindow : Window
 
         if (plugin.IsRunning) ImGui.BeginDisabled();
 
-        var uniqueDuties = plugin.Config.RunHistory.Select(r => r.Name).Distinct().ToList();
+        var uniqueDuties = plugin.Config.RunHistory
+            .Select(r => r.Name)
+            .Distinct()
+            .Where(name => showHiddenSelection || !plugin.Config.HiddenDuties.Contains(name))
+            .ToList();
+
         if (string.IsNullOrEmpty(plugin.SelectedHistoryDuty) && uniqueDuties.Count > 0)
             plugin.SelectedHistoryDuty = uniqueDuties[0];
 
+        ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.65f);
         if (ImGui.BeginCombo("##DutySelector", plugin.SelectedHistoryDuty))
         {
             foreach (var duty in uniqueDuties)
             {
-                if (ImGui.Selectable(duty, plugin.SelectedHistoryDuty == duty))
+                bool isHidden = plugin.Config.HiddenDuties.Contains(duty);
+                if (ImGui.Selectable(isHidden ? $"[H] {duty}" : duty, plugin.SelectedHistoryDuty == duty))
                     plugin.SelectedHistoryDuty = duty;
             }
             ImGui.EndCombo();
         }
+        ImGui.PopItemWidth();
 
+        if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
+        {
+            ImGui.SameLine();
+            bool currentlyHidden = plugin.Config.HiddenDuties.Contains(plugin.SelectedHistoryDuty);
+            if (ImGui.Button(currentlyHidden ? "Unhide" : "Hide"))
+            {
+                if (currentlyHidden) plugin.Config.HiddenDuties.Remove(plugin.SelectedHistoryDuty);
+                else plugin.Config.HiddenDuties.Add(plugin.SelectedHistoryDuty);
+                plugin.Config.Save();
+            }
+        }
+
+        ImGui.Checkbox("Show Hidden", ref showHiddenSelection);
         if (plugin.IsRunning) ImGui.EndDisabled();
 
+        // --- RECORDS DISPLAY WITH DELETE BUTTON ---
         if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
         {
             var history = plugin.Config.RunHistory
@@ -240,15 +267,39 @@ public class TimerWindow : Window
                 .Take(5)
                 .ToList();
 
-            ImGui.TextColored(new Vector4(1, 0.8f, 0.2f, 1), $"Top 5 Records:");
-            foreach (var run in history)
+            if (history.Any())
             {
-                ImGui.BulletText($"{run.Time:mm\\:ss} ({run.Date:MM/dd})");
-                if (ImGui.IsItemHovered())
+                ImGui.TextColored(new Vector4(1, 0.8f, 0.2f, 1), $"Top 5 Records:");
+                foreach (var run in history)
                 {
-                    ImGui.BeginTooltip();
-                    foreach (var m in run.Party) ImGui.Text($"[{m.Job}] {m.Name}");
-                    ImGui.EndTooltip();
+                    // Logic for the Delete Button
+                    if (ImGui.Button($"X##{run.Id}"))
+                    {
+                        if (deleteConfirmId == run.Id)
+                        {
+                            plugin.Config.RunHistory.RemoveAll(r => r.Id == run.Id);
+                            plugin.Config.Save();
+                            deleteConfirmId = null;
+                        }
+                        else
+                        {
+                            deleteConfirmId = run.Id;
+                        }
+                    }
+
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(deleteConfirmId == run.Id ? "Click again to confirm delete" : "Delete this record");
+
+                    ImGui.SameLine();
+                    ImGui.Text($"{run.Time:mm\\:ss} ({run.Date:MM/dd})");
+
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.TextColored(new Vector4(0.4f, 0.8f, 1.0f, 1.0f), "Party Composition:");
+                        foreach (var m in run.Party) ImGui.Text($"[{m.Job}] {m.Name}");
+                        ImGui.EndTooltip();
+                    }
                 }
             }
         }

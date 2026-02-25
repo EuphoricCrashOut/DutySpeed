@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DutySpeed")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0.0+f422b1e9d510386c3fcf4a0079f5b6b3f464c7c7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0.0+8419f817411ad756f0a48b4499fa39d797d86d1f")]
 [assembly: System.Reflection.AssemblyProductAttribute("DutySpeed")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DutySpeed")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

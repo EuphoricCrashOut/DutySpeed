@@ -1,19 +1,19 @@
 {
-    "Author": "Takkin",
-    "Name": "DutySpeed",
-    "Punchline": "A simple speedrun timer for duties.",
-    "Description": "Automatically tracks your time in dungeons and trials, providing boss kill splits in chat.",
-    "InternalName": "DutySpeed",
-    "AssemblyVersion": "1.0.0.0",
-    "RepoUrl": "",
-    "ApplicableTarget": "ffxiv",
-    "MainControl": "DutySpeed.Plugin",
-    "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
-    "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
-    "ApplicableVersion": "any",
-    "Tags": [
-        "speedrun",
-        "duty",
-        "time"
-    ]
+  "Author": "EuphoricCrashOut",
+  "Name": "DutySpeed",
+  "Punchline": "A simple speedrun timer for duties.",
+  "Description": "Automatically tracks your completion time in duties",
+  "InternalName": "DutySpeed",
+  "AssemblyVersion": "1.0.0.0",
+  "RepoUrl": "",
+  "ApplicableTarget": "ffxiv",
+  "MainControl": "DutySpeed.Plugin, DutySpeed",
+  "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
+  "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "speedrun",
+    "duty",
+    "time"
+  ]
 }
