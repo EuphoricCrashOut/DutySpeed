@@ -1,20 +1,21 @@
 {
   "Author": "EuphoricCrashOut",
   "Name": "DutySpeed",
-  "Punchline": "A simple speedrun timer for duties.",
-  "Description": "Automatically tracks your completion time in duties",
   "InternalName": "DutySpeed",
-  "AssemblyVersion": "1.0.0.0",
-  "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
-  "ApplicableTarget": "ffxiv",
-  "MainControl": "DutySpeed.Plugin,DutySpeed",
-  "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
-  "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
+  "AssemblyVersion": "1.2.0.0",
+  "Description": "Automatically tracks your completion time in duties",
   "ApplicableVersion": "any",
+  "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
+  "MainControl": "DutySpeed.Plugin,DutySpeed",
+  "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
   "Tags": [
     "speedrun",
     "duty",
     "record",
     "time"
-  ]
+  ],
+  "DalamudApiLevel": 14,
+  "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
+  "Punchline": "A simple speedrun timer for duties.",
+  "AcceptsFeedback": true
 }
