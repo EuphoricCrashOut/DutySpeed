@@ -1,28 +1,10 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
-    <PropertyGroup>
-        <TargetFramework>net10.0-windows</TargetFramework>
-        <Platforms>x64</Platforms>
-        <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <PackageId>DutySpeed</PackageId>
-        <Version>1.0.0.0</Version>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <FileVersion>1.0.0.0</FileVersion>
-		<GenerateDalamudManifest>false</GenerateDalamudManifest>
-    </PropertyGroup>
-    <ItemGroup>
-      <Compile Remove="Configuration.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include="DutySpeed.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Update="DalamudPackager" Version="14.0.1" />
-    </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<Platforms>x64</Platforms>
+		<PackageId>DutySpeed</PackageId>
+		<Version>1.2.0.0</Version>
+		<DalamudPluginClass>DutySpeed.Plugin</DalamudPluginClass>
+		<GenerateDalamudManifest>true</GenerateDalamudManifest>
+	</PropertyGroup>
 </Project>

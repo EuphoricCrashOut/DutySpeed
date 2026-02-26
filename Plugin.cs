@@ -10,9 +10,11 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using ImGui = Dalamud.Bindings.ImGui.ImGui;
-using ImGuiWindowFlags = Dalamud.Bindings.ImGui.ImGuiWindowFlags;
 using Dalamud.Configuration;
+using Dalamud.Interface;
+
+// 2026 SDK Fix: Use Dalamud's native ImGui bindings
+using Dalamud.Bindings.ImGui;
 
 namespace DutySpeed;
 
@@ -35,7 +37,7 @@ public class PartyMember
 
 public class DutyRecord
 {
-    public Guid Id { get; set; } = Guid.NewGuid(); // Added Unique ID for precise deletion
+    public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
     public TimeSpan Time { get; set; }
     public DateTime Date { get; set; }
@@ -75,13 +77,23 @@ public sealed class Plugin : IDalamudPlugin
         timerWindow = new TimerWindow(this);
         windowSystem.AddWindow(timerWindow);
 
-        CommandManager.AddHandler("/ds", new Dalamud.Game.Command.CommandInfo((_, _) => timerWindow.IsOpen = !timerWindow.IsOpen)
+        CommandManager.AddHandler("/ds", new Dalamud.Game.Command.CommandInfo(OnCommand)
         {
             HelpMessage = "Toggles the DutySpeed timer window."
         });
 
-        PluginInterface.UiBuilder.Draw += windowSystem.Draw;
+        PluginInterface.UiBuilder.Draw += DrawUI;
         Framework.Update += OnUpdate;
+    }
+
+    private void OnCommand(string command, string args)
+    {
+        timerWindow.IsOpen = !timerWindow.IsOpen;
+    }
+
+    private void DrawUI()
+    {
+        windowSystem.Draw();
     }
 
     private void OnUpdate(IFramework framework)
@@ -165,7 +177,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         foreach (var obj in ObjectTable)
         {
-            if (obj is ICharacter { CurrentHp: 0 } character && !DefeatedBossIds.Contains(character.EntityId))
+            if (obj is ICharacter character && character.CurrentHp == 0 && !DefeatedBossIds.Contains(character.EntityId))
             {
                 if (character.StatusFlags.HasFlag(StatusFlags.Hostile))
                 {
@@ -179,7 +191,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         CommandManager.RemoveHandler("/ds");
         Framework.Update -= OnUpdate;
-        PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
+        PluginInterface.UiBuilder.Draw -= DrawUI;
         windowSystem.RemoveAllWindows();
     }
 }
@@ -189,12 +201,14 @@ public class TimerWindow : Window
 {
     private readonly Plugin plugin;
     private bool showHiddenSelection = false;
-    private Guid? deleteConfirmId = null; // Track which record is pending deletion
+    private Guid? deleteConfirmId = null;
 
     public TimerWindow(Plugin plugin) : base("DutySpeed Timer###DutySpeedMain")
     {
         this.plugin = plugin;
         this.SizeConstraints = new WindowSizeConstraints { MinimumSize = new Vector2(250, 200), MaximumSize = new Vector2(400, 800) };
+
+        // Use the native Dalamud ImGui flags directly
         this.Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -230,7 +244,7 @@ public class TimerWindow : Window
         if (string.IsNullOrEmpty(plugin.SelectedHistoryDuty) && uniqueDuties.Count > 0)
             plugin.SelectedHistoryDuty = uniqueDuties[0];
 
-        ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.65f);
+        ImGui.PushItemWidth(ImGui.GetWindowSize().X * 0.65f);
         if (ImGui.BeginCombo("##DutySelector", plugin.SelectedHistoryDuty))
         {
             foreach (var duty in uniqueDuties)
@@ -258,7 +272,6 @@ public class TimerWindow : Window
         ImGui.Checkbox("Show Hidden", ref showHiddenSelection);
         if (plugin.IsRunning) ImGui.EndDisabled();
 
-        // --- RECORDS DISPLAY WITH DELETE BUTTON ---
         if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
         {
             var history = plugin.Config.RunHistory
@@ -272,7 +285,6 @@ public class TimerWindow : Window
                 ImGui.TextColored(new Vector4(1, 0.8f, 0.2f, 1), $"Top 5 Records:");
                 foreach (var run in history)
                 {
-                    // Logic for the Delete Button
                     if (ImGui.Button($"X##{run.Id}"))
                     {
                         if (deleteConfirmId == run.Id)
