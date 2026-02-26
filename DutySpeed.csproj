@@ -8,6 +8,11 @@
 		<GenerateDalamudManifest>true</GenerateDalamudManifest>
 	</PropertyGroup>
 	<ItemGroup>
+		<Content Include="DutySpeed.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
 	  <Compile Remove="bin\Debug\**" />
 	  <Compile Remove="bin\Release\**" />
 	  <EmbeddedResource Remove="bin\Debug\**" />
