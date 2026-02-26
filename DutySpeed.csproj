@@ -7,4 +7,27 @@
 		<DalamudPluginClass>DutySpeed.Plugin</DalamudPluginClass>
 		<GenerateDalamudManifest>true</GenerateDalamudManifest>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="bin\Debug\**" />
+	  <Compile Remove="bin\Release\**" />
+	  <EmbeddedResource Remove="bin\Debug\**" />
+	  <EmbeddedResource Remove="bin\Release\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="bin\x64\Release\DutySpeed.deps.json" />
+	  <Content Include="bin\x64\Release\DutySpeed.json" />
+	  <Content Include="bin\x64\Release\DutySpeed\DutySpeed.json" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="bin\x64\Release\DutySpeed.dll" />
+	  <None Include="bin\x64\Release\DutySpeed\latest.zip" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="bin\x64\Debug\" />
+	  <Folder Include="bin\x64\Release\runtimes\linux-x64\native\" />
+	  <Folder Include="bin\x64\Release\runtimes\osx\native\" />
+	  <Folder Include="bin\x64\Release\runtimes\win-arm64\native\" />
+	  <Folder Include="bin\x64\Release\runtimes\win-x64\native\" />
+	  <Folder Include="bin\x64\Release\runtimes\win-x86\native\" />
+	</ItemGroup>
 </Project>
