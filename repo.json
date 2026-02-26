@@ -1,12 +1,13 @@
 [
   {
+    "Name": "DutySpeed",
     "InternalName": "DutySpeed",
     "AssemblyVersion": "1.2.0.0",
+    "Description": "Automatically tracks your completion time in duties",
+    "ApplicableVersion": "any",
     "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
     "DownloadLinkUpdate": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
     "IsCore": false,
-    "IsHide": false,
-    "IsTestingExclusive": false,
-    "TestingDalamudApiLevel": 14
+    "IsHide": false
   }
 ]
