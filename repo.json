@@ -1,10 +1,29 @@
 [
   {
+    "Author": "EuphoricCrashOut",
     "Name": "DutySpeed",
     "InternalName": "DutySpeed",
     "AssemblyVersion": "1.2.0.0",
     "Description": "Automatically tracks your completion time in duties",
     "ApplicableVersion": "any",
+    "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
+    "Tags": [
+      "speedrun",
+      "duty",
+      "record",
+      "time"
+    ],
+    "CategoryTags": [
+      "Utility"
+    ],
+    "DalamudApiLevel": 14,
+    "LoadRequiredState": 0,
+    "LoadSync": false,
+    "CanUnloadAsync": false,
+    "LoadPriority": 0,
+    "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
+    "Punchline": "A simple speedrun timer for duties.",
+    "AcceptsFeedback": true,
     "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
     "DownloadLinkUpdate": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
     "IsCore": false,
