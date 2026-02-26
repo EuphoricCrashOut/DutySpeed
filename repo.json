@@ -4,7 +4,7 @@
     "Name": "DutySpeed",
     "InternalName": "DutySpeed",
     "AssemblyVersion": "1.2.0.0",
-    "Description": "Automatically tracks your completion time in duties",
+    "Description": "Automatically tracks your completion time in duties.\n\nDutySpeed is a lightweight, automated speedrun timer for Final Fantasy XIV. It helps you track the time it took to complete dungeons, trials, and raids without needing to manually start or stop a stopwatch.\n\nFeatures:\n- Automatic Detection: Starts the timer the moment the 'Duty Commenced' message appears.\n- Top 5 History: Maintains a local leaderboard for every unique duty you run.\n- Party Tracking: Records who you ran with and what jobs they played (hover over history to view).\n- Auto-Open: Optionally pops the window open only when you enter an instance.\n- Record Browser: View your personal bests for any dungeon even while standing in town.\n\nGLHF - May you have quick and painless runs.",
     "ApplicableVersion": "any",
     "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
     "Tags": [
