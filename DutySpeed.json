@@ -6,8 +6,9 @@
   "Description": "Automatically tracks your completion time in duties",
   "ApplicableVersion": "any",
   "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
-  "MainControl": "DutySpeed.Plugin,DutySpeed",
+  "MainControl": "DutySpeed.Plugin",
   "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
+  "CategoryTags": [ "Utility" ],
   "Tags": [
     "speedrun",
     "duty",
