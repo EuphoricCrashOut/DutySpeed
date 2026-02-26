@@ -1,11 +1,11 @@
 [
   {
-    "Author": "EuphoricCrashOut",
-    "Name": "DutySpeed",
     "InternalName": "DutySpeed",
-    "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
-    "ApplicableTarget": "ffxiv",
-    "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
-    "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/download/v1.0/DutySpeed.zip"
+    "AssemblyVersion": "1.2.0.0",
+    "DownloadLinkInstall": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
+    "DownloadLinkUpdate": "https://github.com/EuphoricCrashOut/DutySpeed/releases/latest/download/DutySpeed.zip",
+    "DownloadCount": 0,
+    "IsCore": false,
+    "IsHide": false
   }
 ]
