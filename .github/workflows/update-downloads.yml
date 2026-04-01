@@ -12,12 +12,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6  # Updated from v4 to v6
 
       - name: Fetch Download Count
         id: get_downloads
         run: |
-          DOWNLOADS=$(curl -s https://api.github.com/repos/EuphoricCrashOut/DutySpeed/releases | jq '[.[].assets[].download_count] | add')
+          DOWNLOADS=$(curl -s https://api.github.com/repos/EuphoricCrashOut/DutySpeed/releases | jq '[.[].assets[].download_count] | add // 0')
           echo "count=$DOWNLOADS" >> $GITHUB_OUTPUT
 
       - name: Update repo.json
@@ -30,4 +30,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add repo.json
           git commit -m "chore: update download count to ${{ steps.get_downloads.outputs.count }}" || exit 0
-          git pus
+          git push
