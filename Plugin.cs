@@ -83,7 +83,7 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw += DrawUI;
         Framework.Update += OnUpdate;
 
-        // --- THE FIX: Subscribe to events ---
+        // Subscribe to events for official submission
         DutyState.DutyStarted += OnDutyStarted;
         DutyState.DutyCompleted += OnDutyCompleted;
     }
@@ -91,13 +91,11 @@ public sealed class Plugin : IDalamudPlugin
     private void OnCommand(string command, string args) => timerWindow.IsOpen = !timerWindow.IsOpen;
     private void DrawUI() => windowSystem.Draw();
 
-    // Event handler for Start
     private void OnDutyStarted(object? sender, ushort territoryId)
     {
         if (!IsRunning) StartDuty();
     }
 
-    // Event handler for End
     private void OnDutyCompleted(object? sender, ushort territoryId)
     {
         if (IsRunning) EndDuty();
@@ -105,7 +103,6 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnUpdate(IFramework framework)
     {
-        // Update duty name strings
         if (DutyState.IsDutyStarted)
         {
             var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
@@ -117,23 +114,27 @@ public sealed class Plugin : IDalamudPlugin
         else
         {
             CurrentDutyName = "Not in Duty";
+
+            // Safety Check: Stop timer if user leaves duty manually
+            if (IsRunning)
+            {
+                StopTimerWithoutSaving();
+            }
         }
 
-        // We removed StartDuty/EndDuty from here to satisfy the reviewer!
         if (IsRunning) CheckBossDeaths();
     }
 
     private void StartDuty()
     {
-        // 1. Get the name immediately
+        // Capture name immediately
         var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
         cachedDutyName = territory?.PlaceName.Value.Name.ExtractText() ?? "Unknown Duty";
         CurrentDutyName = cachedDutyName;
 
-        // 2. FORCE the history dropdown to switch to this duty
+        // Force UI to show records for this duty
         SelectedHistoryDuty = cachedDutyName;
 
-        // 3. Reset the rest
         DutyTimer.Restart();
         IsRunning = true;
         DefeatedBossIds.Clear();
@@ -160,6 +161,13 @@ public sealed class Plugin : IDalamudPlugin
             Config.Save();
             SelectedHistoryDuty = cachedDutyName;
         }
+    }
+
+    private void StopTimerWithoutSaving()
+    {
+        DutyTimer.Stop();
+        IsRunning = false;
+        ChatGui.Print("[DutySpeed] Duty abandoned. Timer stopped.");
     }
 
     private List<PartyMember> GetCurrentParty()
@@ -205,10 +213,8 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        // --- THE FIX: Unsubscribe from events ---
         DutyState.DutyStarted -= OnDutyStarted;
         DutyState.DutyCompleted -= OnDutyCompleted;
-
         CommandManager.RemoveHandler("/ds");
         Framework.Update -= OnUpdate;
         PluginInterface.UiBuilder.Draw -= DrawUI;
