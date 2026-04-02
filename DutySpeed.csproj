@@ -1,38 +1,27 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
+﻿<Project Sdk="Dalamud.NET.Sdk/14.0.2">
 	<PropertyGroup>
 		<TargetFramework>net10.0-windows</TargetFramework>
 		<Platforms>x64</Platforms>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+
 		<PackageId>DutySpeed</PackageId>
 		<Version>1.2.0.0</Version>
+		<AssemblyVersion>1.2.0.0</AssemblyVersion>
+		<FileVersion>1.2.0.0</FileVersion>
+
 		<DalamudPluginClass>DutySpeed.Plugin</DalamudPluginClass>
 		<GenerateDalamudManifest>true</GenerateDalamudManifest>
 	</PropertyGroup>
+
 	<ItemGroup>
-		<Content Include="DutySpeed.json">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
+		<None Include="DutySpeed.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
+
 	<ItemGroup>
-	  <Compile Remove="bin\Debug\**" />
-	  <Compile Remove="bin\Release\**" />
-	  <EmbeddedResource Remove="bin\Debug\**" />
-	  <EmbeddedResource Remove="bin\Release\**" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Content Include="bin\x64\Release\DutySpeed.deps.json" />
-	  <Content Include="bin\x64\Release\DutySpeed.json" />
-	  <Content Include="bin\x64\Release\DutySpeed\DutySpeed.json" />
-	</ItemGroup>
-	<ItemGroup>
-	  <None Include="bin\x64\Release\DutySpeed.dll" />
-	  <None Include="bin\x64\Release\DutySpeed\latest.zip" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="bin\x64\Debug\" />
-	  <Folder Include="bin\x64\Release\runtimes\linux-x64\native\" />
-	  <Folder Include="bin\x64\Release\runtimes\osx\native\" />
-	  <Folder Include="bin\x64\Release\runtimes\win-arm64\native\" />
-	  <Folder Include="bin\x64\Release\runtimes\win-x64\native\" />
-	  <Folder Include="bin\x64\Release\runtimes\win-x86\native\" />
+		<PackageReference Include="DalamudPackager" Version="14.0.2" />
+		<PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.2" PrivateAssets="All"/>
 	</ItemGroup>
 </Project>
