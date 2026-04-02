@@ -12,6 +12,7 @@
 
 		<DalamudPluginClass>DutySpeed.Plugin</DalamudPluginClass>
 		<GenerateDalamudManifest>true</GenerateDalamudManifest>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	</PropertyGroup>
 
 	<ItemGroup>
