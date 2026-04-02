@@ -1,0 +1,33 @@
+name: Update Download Count
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' 
+  workflow_dispatch: 
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6  # Updated from v4 to v6
+
+      - name: Fetch Download Count
+        id: get_downloads
+        run: |
+          DOWNLOADS=$(curl -s https://api.github.com/repos/EuphoricCrashOut/DutySpeed/releases | jq '[.[].assets[].download_count] | add // 0')
+          echo "count=$DOWNLOADS" >> $GITHUB_OUTPUT
+
+      - name: Update repo.json
+        run: |
+          jq '.[0].DownloadCount = ${{ steps.get_downloads.outputs.count }}' repo.json > temp.json && mv temp.json repo.json
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add repo.json
+          git commit -m "chore: update download count to ${{ steps.get_downloads.outputs.count }}" || exit 0
+          git push
