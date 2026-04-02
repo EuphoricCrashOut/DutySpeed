@@ -2,6 +2,7 @@
   "Author": "EuphoricCrashOut",
   "Name": "DutySpeed",
   "InternalName": "DutySpeed",
+  "DownloadCount": 1,
   "AssemblyVersion": "1.2.0.0",
   "Description": "Automatically tracks your completion time in duties",
   "ApplicableVersion": "any",

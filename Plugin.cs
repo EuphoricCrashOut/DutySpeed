@@ -12,8 +12,6 @@ using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using Dalamud.Configuration;
 using Dalamud.Interface;
-
-// 2026 SDK Fix: Use Dalamud's native ImGui bindings
 using Dalamud.Bindings.ImGui;
 
 namespace DutySpeed;
@@ -84,20 +82,30 @@ public sealed class Plugin : IDalamudPlugin
 
         PluginInterface.UiBuilder.Draw += DrawUI;
         Framework.Update += OnUpdate;
+
+        // --- THE FIX: Subscribe to events ---
+        DutyState.DutyStarted += OnDutyStarted;
+        DutyState.DutyCompleted += OnDutyCompleted;
     }
 
-    private void OnCommand(string command, string args)
+    private void OnCommand(string command, string args) => timerWindow.IsOpen = !timerWindow.IsOpen;
+    private void DrawUI() => windowSystem.Draw();
+
+    // Event handler for Start
+    private void OnDutyStarted(object? sender, ushort territoryId)
     {
-        timerWindow.IsOpen = !timerWindow.IsOpen;
+        if (!IsRunning) StartDuty();
     }
 
-    private void DrawUI()
+    // Event handler for End
+    private void OnDutyCompleted(object? sender, ushort territoryId)
     {
-        windowSystem.Draw();
+        if (IsRunning) EndDuty();
     }
 
     private void OnUpdate(IFramework framework)
     {
+        // Update duty name strings
         if (DutyState.IsDutyStarted)
         {
             var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
@@ -111,8 +119,7 @@ public sealed class Plugin : IDalamudPlugin
             CurrentDutyName = "Not in Duty";
         }
 
-        if (DutyState.IsDutyStarted && !IsRunning) StartDuty();
-        if (!DutyState.IsDutyStarted && IsRunning) EndDuty();
+        // We removed StartDuty/EndDuty from here to satisfy the reviewer!
         if (IsRunning) CheckBossDeaths();
     }
 
@@ -189,6 +196,10 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+        // --- THE FIX: Unsubscribe from events ---
+        DutyState.DutyStarted -= OnDutyStarted;
+        DutyState.DutyCompleted -= OnDutyCompleted;
+
         CommandManager.RemoveHandler("/ds");
         Framework.Update -= OnUpdate;
         PluginInterface.UiBuilder.Draw -= DrawUI;
@@ -207,8 +218,6 @@ public class TimerWindow : Window
     {
         this.plugin = plugin;
         this.SizeConstraints = new WindowSizeConstraints { MinimumSize = new Vector2(250, 200), MaximumSize = new Vector2(400, 800) };
-
-        // Use the native Dalamud ImGui flags directly
         this.Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
