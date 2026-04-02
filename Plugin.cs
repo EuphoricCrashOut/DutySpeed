@@ -125,10 +125,19 @@ public sealed class Plugin : IDalamudPlugin
 
     private void StartDuty()
     {
+        // 1. Get the name immediately
+        var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
+        cachedDutyName = territory?.PlaceName.Value.Name.ExtractText() ?? "Unknown Duty";
+        CurrentDutyName = cachedDutyName;
+
+        // 2. FORCE the history dropdown to switch to this duty
+        SelectedHistoryDuty = cachedDutyName;
+
+        // 3. Reset the rest
         DutyTimer.Restart();
         IsRunning = true;
         DefeatedBossIds.Clear();
-        SelectedHistoryDuty = cachedDutyName;
+
         if (Config.AutoOpenOnDuty) timerWindow.IsOpen = true;
     }
 
