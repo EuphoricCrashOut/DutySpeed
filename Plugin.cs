@@ -14,13 +14,14 @@ using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
-// --- THE REAL API 14 FIX ---
+// API 14 Required Bindings
 using ImGui = Dalamud.Bindings.ImGui.ImGui;
 using ImGuiWindowFlags = Dalamud.Bindings.ImGui.ImGuiWindowFlags;
+using ImGuiCond = Dalamud.Bindings.ImGui.ImGuiCond;
 
 namespace DutySpeed;
 
-// --- DATA CLASSES ---
+// --- CONFIGURATION ---
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
@@ -47,7 +48,7 @@ public class DutyRecord
     public List<PartyMember> Party { get; set; } = new();
 }
 
-// --- MAIN PLUGIN ---
+// --- MAIN PLUGIN ENGINE ---
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
@@ -95,22 +96,11 @@ public sealed class Plugin : IDalamudPlugin
     private void OnCommand(string command, string args) => timerWindow.IsOpen = !timerWindow.IsOpen;
     private void DrawUI() => windowSystem.Draw();
 
-    private void OnDutyStarted(object? sender, ushort territoryId)
-    {
-        if (!IsRunning) StartDuty();
-    }
-
-    private void OnDutyCompleted(object? sender, ushort territoryId)
-    {
-        if (IsRunning) EndDuty();
-    }
-
     private void OnUpdate(IFramework framework)
     {
         if (DutyState.IsDutyStarted)
         {
             var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()!.GetRow(ClientState.TerritoryType);
-            // API 14 change: TerritoryType is a struct. 
             var name = territory.PlaceName.Value.Name.ToString();
 
             CurrentDutyName = name;
@@ -123,6 +113,16 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         if (IsRunning) CheckBossDeaths();
+    }
+
+    private void OnDutyStarted(object? sender, ushort territoryId)
+    {
+        if (!IsRunning) StartDuty();
+    }
+
+    private void OnDutyCompleted(object? sender, ushort territoryId)
+    {
+        if (IsRunning) EndDuty();
     }
 
     private void StartDuty()
@@ -170,7 +170,6 @@ public sealed class Plugin : IDalamudPlugin
     private List<PartyMember> GetCurrentParty()
     {
         var members = new List<PartyMember>();
-        // API 14: LocalPlayer moved to IObjectTable
         var localPlayer = ObjectTable.LocalPlayer;
 
         if (PartyList.Length == 0 && localPlayer != null)
@@ -230,7 +229,18 @@ public class TimerWindow : Window
     public TimerWindow(Plugin plugin) : base("DutySpeed Timer###DutySpeedMain")
     {
         this.plugin = plugin;
-        this.Flags = ImGuiWindowFlags.AlwaysAutoResize;
+
+        // Ensure manual resizing is allowed
+        this.Flags = ImGuiWindowFlags.None;
+
+        this.SizeConstraints = new WindowSizeConstraints
+        {
+            MinimumSize = new Vector2(250, 160),
+            MaximumSize = new Vector2(1000, 1000)
+        };
+
+        this.Size = new Vector2(300, 220);
+        this.SizeCondition = ImGuiCond.FirstUseEver;
     }
 
     public override void Draw()
@@ -243,17 +253,26 @@ public class TimerWindow : Window
         }
 
         ImGui.Separator();
+
+        // Anchor to the left (Removed the previous centering math)
         ImGui.TextDisabled(plugin.IsRunning ? "Active Duty:" : "Status:");
         ImGui.Text(plugin.CurrentDutyName);
 
         var time = plugin.DutyTimer.Elapsed;
+        var timeText = $"{time:mm\\:ss}";
+
         ImGui.SetWindowFontScale(2.0f);
-        ImGui.TextColored(new Vector4(0.4f, 1.0f, 0.4f, 1.0f), $"{time:mm\\:ss}");
+        ImGui.TextColored(new Vector4(0.4f, 1.0f, 0.4f, 1.0f), timeText);
         ImGui.SetWindowFontScale(1.0f);
 
         ImGui.Separator();
 
-        using (var combo = ImRaii.Combo("Browse Records:", plugin.SelectedHistoryDuty))
+        // Stack label above the dropdown for better horizontal space management
+        ImGui.Text("Browse Records:");
+
+        // Dynamically size the combo box to fit window width
+        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 65f);
+        using (var combo = ImRaii.Combo("##HistorySelection", plugin.SelectedHistoryDuty))
         {
             if (combo)
             {
@@ -276,7 +295,7 @@ public class TimerWindow : Window
         {
             ImGui.SameLine();
             bool currentlyHidden = plugin.Config.HiddenDuties.Contains(plugin.SelectedHistoryDuty);
-            if (ImGui.Button(currentlyHidden ? "Unhide" : "Hide"))
+            if (ImGui.Button(currentlyHidden ? "Unhide" : "Hide", new Vector2(60, 0)))
             {
                 if (currentlyHidden) plugin.Config.HiddenDuties.Remove(plugin.SelectedHistoryDuty);
                 else plugin.Config.HiddenDuties.Add(plugin.SelectedHistoryDuty);
@@ -294,9 +313,10 @@ public class TimerWindow : Window
                 .Take(5)
                 .ToList();
 
-            if (history.Count != 0)
+            if (history.Count > 0)
             {
-                ImGui.TextColored(new Vector4(1, 0.8f, 0.2f, 1), $"Top 5 Records:");
+                ImGui.Spacing();
+                ImGui.TextColored(new Vector4(1, 0.8f, 0.2f, 1), "Top 5 Records:");
                 foreach (var run in history)
                 {
                     if (ImGui.Button($"X##{run.Id}"))
