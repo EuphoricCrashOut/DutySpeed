@@ -2,26 +2,16 @@
   "Author": "EuphoricCrashOut",
   "Name": "DutySpeed",
   "InternalName": "DutySpeed",
-  "AssemblyVersion": "1.2.0.0",
-  "Description": "Automatically tracks your completion time in duties and keeps a history of your fastest runs with party composition logs.",
-  "ApplicableTarget": "FFXIV",
-  "DalamudApiLevel": 14,
-  "LoadRequiredState": 0,
-  "LoadSync": false,
-  "CanUnloadAsync": true,
-  "LoadPriority": 0,
-  "Punchline": "A simple speedrun timer for duties.",
-  "AcceptsFeedback": true,
+  "Description": "A simple speedrun timer for FFXIV duties.",
+  "Punchline": "Track your duty completion speeds with ease.",
   "CategoryTags": [
     "Utility"
   ],
   "Tags": [
+    "timer",
     "speedrun",
-    "duty",
-    "record",
-    "time"
+    "duty"
   ],
   "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
-  "IconUrl": "https://raw.githubusercontent.com/EuphoricCrashOut/DutySpeed/refs/heads/main/icon.png",
-  "ImageUrls": []
+  "AssemblyVersion": "1.3.4"
 }
