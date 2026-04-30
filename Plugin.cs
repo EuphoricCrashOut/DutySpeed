@@ -5,17 +5,15 @@ using System.Linq;
 using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Configuration;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
+using Dalamud.Game.DutyState; // Essential for IDutyStateEventArgs
 
-// Honors the User Correction Ledger: strictly excluding ImGuiNET namespace
+// Strictly excluding ImGuiNET per User Correction Ledger
 using ImGui = Dalamud.Bindings.ImGui.ImGui;
-using ImGuiCond = Dalamud.Bindings.ImGui.ImGuiCond;
 
 namespace DutySpeed;
 
@@ -48,7 +46,6 @@ public class DutyRecord
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
     [PluginService] internal static IDutyState DutyState { get; private set; } = null!;
     [PluginService] internal static IFramework Framework { get; private set; } = null!;
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
@@ -66,7 +63,6 @@ public sealed class Plugin : IDalamudPlugin
     public string SelectedHistoryDuty { get; set; } = string.Empty;
 
     public Configuration Config { get; }
-    private readonly WindowSystem windowSystem;
     private readonly TimerWindow timerWindow;
 
     public Plugin()
@@ -74,9 +70,7 @@ public sealed class Plugin : IDalamudPlugin
         Config = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Config.HiddenDuties ??= new HashSet<string>();
 
-        this.windowSystem = new WindowSystem("DutySpeed");
         this.timerWindow = new TimerWindow(this);
-        this.windowSystem.AddWindow(this.timerWindow);
 
         CommandManager.AddHandler("/ds", new Dalamud.Game.Command.CommandInfo(OnCommand)
         {
@@ -86,17 +80,24 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw += DrawUI;
         Framework.Update += OnUpdate;
 
-        // Subscribing based on the EventHandler<ushort> verified in image_c5ec9b.png
+        // Subscribing using the delegate signature verified from your decompiler output
         DutyState.DutyStarted += OnDutyStartedHandler;
         DutyState.DutyCompleted += OnDutyCompletedHandler;
     }
 
-    // Handlers matching the System.EventHandler<ushort> signature
-    private void OnDutyStartedHandler(object? sender, ushort territoryId) => StartDuty();
-    private void OnDutyCompletedHandler(object? sender, ushort territoryId) => EndDuty();
+    // Handlers matching: public delegate void DutyStartedDelegate(IDutyStateEventArgs args)
+    private void OnDutyStartedHandler(IDutyStateEventArgs args) => StartDuty();
+    private void OnDutyCompletedHandler(IDutyStateEventArgs args) => EndDuty();
 
     private void OnCommand(string command, string args) => timerWindow.IsOpen = !timerWindow.IsOpen;
-    private void DrawUI() => windowSystem.Draw();
+
+    private void DrawUI()
+    {
+        if (timerWindow.IsOpen)
+        {
+            timerWindow.Draw();
+        }
+    }
 
     private void OnUpdate(IFramework framework)
     {
@@ -209,64 +210,61 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler("/ds");
         Framework.Update -= OnUpdate;
         PluginInterface.UiBuilder.Draw -= DrawUI;
-        windowSystem.RemoveAllWindows();
     }
 }
 
-public class TimerWindow : Window
+public class TimerWindow
 {
     private readonly Plugin plugin;
+    public bool IsOpen = false;
 
-    public TimerWindow(Plugin plugin) : base("DutySpeed Timer###DutySpeedMain")
+    public TimerWindow(Plugin plugin)
     {
         this.plugin = plugin;
-        this.SizeConstraints = new WindowSizeConstraints
-        {
-            MinimumSize = new Vector2(250, 160),
-            MaximumSize = new Vector2(1000, 1000)
-        };
-        this.Size = new Vector2(300, 220);
-        this.SizeCondition = ImGuiCond.FirstUseEver;
     }
 
-    public override void Draw()
+    public void Draw()
     {
-        var autoOpen = plugin.Config.AutoOpenOnDuty;
-        if (ImGui.Checkbox("Auto-open in Duty", ref autoOpen))
+        if (ImGui.Begin("DutySpeed Timer###DutySpeedMain", ref IsOpen))
         {
-            plugin.Config.AutoOpenOnDuty = autoOpen;
-            plugin.Config.Save();
-        }
-
-        ImGui.Separator();
-        ImGui.Text($"{plugin.CurrentDutyName}");
-
-        var time = plugin.DutyTimer.Elapsed;
-        ImGui.SetWindowFontScale(2.0f);
-        ImGui.TextColored(new Vector4(0.4f, 1.0f, 0.4f, 1.0f), $"{time:mm\\:ss}");
-        ImGui.SetWindowFontScale(1.0f);
-
-        ImGui.Separator();
-
-        if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
-        {
-            var history = plugin.Config.RunHistory
-                .Where(r => r.Name == plugin.SelectedHistoryDuty)
-                .OrderBy(r => r.Time)
-                .Take(5)
-                .ToList();
-
-            foreach (var run in history)
+            var autoOpen = plugin.Config.AutoOpenOnDuty;
+            if (ImGui.Checkbox("Auto-open in Duty", ref autoOpen))
             {
-                ImGui.Text($"{run.Time:mm\\:ss} ({run.Date:MM/dd})");
-                if (ImGui.IsItemHovered())
+                plugin.Config.AutoOpenOnDuty = autoOpen;
+                plugin.Config.Save();
+            }
+
+            ImGui.Separator();
+            ImGui.Text($"{plugin.CurrentDutyName}");
+
+            var time = plugin.DutyTimer.Elapsed;
+            ImGui.SetWindowFontScale(2.0f);
+            ImGui.TextColored(new Vector4(0.4f, 1.0f, 0.4f, 1.0f), $"{time:mm\\:ss}");
+            ImGui.SetWindowFontScale(1.0f);
+
+            ImGui.Separator();
+
+            if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
+            {
+                var history = plugin.Config.RunHistory
+                    .Where(r => r.Name == plugin.SelectedHistoryDuty)
+                    .OrderBy(r => r.Time)
+                    .Take(5)
+                    .ToList();
+
+                foreach (var run in history)
                 {
-                    using (ImRaii.Tooltip())
+                    ImGui.Text($"{run.Time:mm\\:ss} ({run.Date:MM/dd})");
+                    if (ImGui.IsItemHovered())
                     {
-                        foreach (var m in run.Party) ImGui.Text($"[{m.Job}] {m.Name}");
+                        using (ImRaii.Tooltip())
+                        {
+                            foreach (var m in run.Party) ImGui.Text($"[{m.Job}] {m.Name}");
+                        }
                     }
                 }
             }
         }
+        ImGui.End();
     }
 }
