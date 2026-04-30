@@ -8,15 +8,13 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Services; // API 15 Standard Namespace
-using Dalamud.Utility;
+using Dalamud.Plugin.Services;
 using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
-// API 15 Hexa-based Bindings
+// Honors the User Correction Ledger: strictly excluding ImGuiNET namespace
 using ImGui = Dalamud.Bindings.ImGui.ImGui;
-using ImGuiWindowFlags = Dalamud.Bindings.ImGui.ImGuiWindowFlags;
 using ImGuiCond = Dalamud.Bindings.ImGui.ImGuiCond;
 
 namespace DutySpeed;
@@ -61,8 +59,6 @@ public sealed class Plugin : IDalamudPlugin
 
     public Stopwatch DutyTimer { get; } = new();
     public bool IsRunning { get; private set; } = false;
-
-    // API 15: Migration to 64-bit ulong for GameObject IDs
     public HashSet<ulong> DefeatedBossIds { get; } = new();
 
     public string CurrentDutyName { get; set; } = "Not in Duty";
@@ -70,7 +66,7 @@ public sealed class Plugin : IDalamudPlugin
     public string SelectedHistoryDuty { get; set; } = string.Empty;
 
     public Configuration Config { get; }
-    private readonly WindowSystem windowSystem = new("DutySpeed");
+    private readonly WindowSystem windowSystem;
     private readonly TimerWindow timerWindow;
 
     public Plugin()
@@ -78,8 +74,9 @@ public sealed class Plugin : IDalamudPlugin
         Config = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Config.HiddenDuties ??= new HashSet<string>();
 
-        timerWindow = new TimerWindow(this);
-        windowSystem.AddWindow(timerWindow);
+        this.windowSystem = new WindowSystem("DutySpeed");
+        this.timerWindow = new TimerWindow(this);
+        this.windowSystem.AddWindow(this.timerWindow);
 
         CommandManager.AddHandler("/ds", new Dalamud.Game.Command.CommandInfo(OnCommand)
         {
@@ -89,9 +86,14 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw += DrawUI;
         Framework.Update += OnUpdate;
 
-        DutyState.DutyStarted += OnDutyStarted;
-        DutyState.DutyCompleted += OnDutyCompleted;
+        // Subscribing based on the EventHandler<ushort> verified in image_c5ec9b.png
+        DutyState.DutyStarted += OnDutyStartedHandler;
+        DutyState.DutyCompleted += OnDutyCompletedHandler;
     }
+
+    // Handlers matching the System.EventHandler<ushort> signature
+    private void OnDutyStartedHandler(object? sender, ushort territoryId) => StartDuty();
+    private void OnDutyCompletedHandler(object? sender, ushort territoryId) => EndDuty();
 
     private void OnCommand(string command, string args) => timerWindow.IsOpen = !timerWindow.IsOpen;
     private void DrawUI() => windowSystem.Draw();
@@ -115,16 +117,6 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         if (IsRunning) CheckBossDeaths();
-    }
-
-    private void OnDutyStarted(object? sender, ushort territoryId)
-    {
-        if (!IsRunning) StartDuty();
-    }
-
-    private void OnDutyCompleted(object? sender, ushort territoryId)
-    {
-        if (IsRunning) EndDuty();
     }
 
     private void StartDuty()
@@ -166,14 +158,11 @@ public sealed class Plugin : IDalamudPlugin
     {
         DutyTimer.Stop();
         IsRunning = false;
-        ChatGui.Print("[DutySpeed] Duty abandoned. Timer stopped.");
     }
 
     private List<PartyMember> GetCurrentParty()
     {
         var members = new List<PartyMember>();
-
-        // API 15: IClientState.LocalPlayer is obsolete; use IObjectTable.LocalPlayer
         var localPlayer = ObjectTable.LocalPlayer;
 
         if (PartyList.Length == 0 && localPlayer != null)
@@ -202,7 +191,6 @@ public sealed class Plugin : IDalamudPlugin
     {
         foreach (var obj in ObjectTable)
         {
-            // API 15: Using GameObjectId (ulong) instead of EntityId (uint)
             if (obj is ICharacter character && character.CurrentHp == 0 && !DefeatedBossIds.Contains(character.GameObjectId))
             {
                 if (character.StatusFlags.HasFlag(StatusFlags.Hostile))
@@ -215,8 +203,9 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        DutyState.DutyStarted -= OnDutyStarted;
-        DutyState.DutyCompleted -= OnDutyCompleted;
+        DutyState.DutyStarted -= OnDutyStartedHandler;
+        DutyState.DutyCompleted -= OnDutyCompletedHandler;
+
         CommandManager.RemoveHandler("/ds");
         Framework.Update -= OnUpdate;
         PluginInterface.UiBuilder.Draw -= DrawUI;
@@ -250,7 +239,7 @@ public class TimerWindow : Window
         }
 
         ImGui.Separator();
-        ImGui.Text(plugin.CurrentDutyName);
+        ImGui.Text($"{plugin.CurrentDutyName}");
 
         var time = plugin.DutyTimer.Elapsed;
         ImGui.SetWindowFontScale(2.0f);
