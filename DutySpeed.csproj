@@ -20,15 +20,6 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-
-	<!-- Force compiler to use local dev hooks to match game runtime -->
-	<ItemGroup>
-		<Reference Include="Dalamud">
-			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-	</ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="DalamudPackager" Version="15.0.0" />
 		<PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.2" />
