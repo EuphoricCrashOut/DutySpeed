@@ -8,20 +8,19 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
+using Dalamud.Plugin.Services; // API 15 Standard Namespace
 using Dalamud.Utility;
 using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
-// API 14 Required Bindings
+// API 15 Hexa-based Bindings
 using ImGui = Dalamud.Bindings.ImGui.ImGui;
 using ImGuiWindowFlags = Dalamud.Bindings.ImGui.ImGuiWindowFlags;
 using ImGuiCond = Dalamud.Bindings.ImGui.ImGuiCond;
 
 namespace DutySpeed;
 
-// --- CONFIGURATION ---
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
@@ -48,7 +47,6 @@ public class DutyRecord
     public List<PartyMember> Party { get; set; } = new();
 }
 
-// --- MAIN PLUGIN ENGINE ---
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
@@ -63,7 +61,9 @@ public sealed class Plugin : IDalamudPlugin
 
     public Stopwatch DutyTimer { get; } = new();
     public bool IsRunning { get; private set; } = false;
-    public HashSet<uint> DefeatedBossIds { get; } = new();
+
+    // API 15: Migration to 64-bit ulong for GameObject IDs
+    public HashSet<ulong> DefeatedBossIds { get; } = new();
 
     public string CurrentDutyName { get; set; } = "Not in Duty";
     private string cachedDutyName = "Unknown Duty";
@@ -100,11 +100,13 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (DutyState.IsDutyStarted)
         {
-            var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()!.GetRow(ClientState.TerritoryType);
-            var name = territory.PlaceName.Value.Name.ToString();
-
-            CurrentDutyName = name;
-            cachedDutyName = name;
+            var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
+            if (territory.HasValue)
+            {
+                var name = territory.Value.PlaceName.Value.Name.ToString();
+                CurrentDutyName = name;
+                cachedDutyName = name;
+            }
         }
         else
         {
@@ -127,8 +129,8 @@ public sealed class Plugin : IDalamudPlugin
 
     private void StartDuty()
     {
-        var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()!.GetRow(ClientState.TerritoryType);
-        cachedDutyName = territory.PlaceName.Value.Name.ToString();
+        var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
+        cachedDutyName = territory?.PlaceName.Value.Name.ToString() ?? "Unknown Duty";
         CurrentDutyName = cachedDutyName;
         SelectedHistoryDuty = cachedDutyName;
 
@@ -170,6 +172,8 @@ public sealed class Plugin : IDalamudPlugin
     private List<PartyMember> GetCurrentParty()
     {
         var members = new List<PartyMember>();
+
+        // API 15: IClientState.LocalPlayer is obsolete; use IObjectTable.LocalPlayer
         var localPlayer = ObjectTable.LocalPlayer;
 
         if (PartyList.Length == 0 && localPlayer != null)
@@ -198,11 +202,12 @@ public sealed class Plugin : IDalamudPlugin
     {
         foreach (var obj in ObjectTable)
         {
-            if (obj is ICharacter character && character.CurrentHp == 0 && !DefeatedBossIds.Contains(character.EntityId))
+            // API 15: Using GameObjectId (ulong) instead of EntityId (uint)
+            if (obj is ICharacter character && character.CurrentHp == 0 && !DefeatedBossIds.Contains(character.GameObjectId))
             {
                 if (character.StatusFlags.HasFlag(StatusFlags.Hostile))
                 {
-                    DefeatedBossIds.Add(character.EntityId);
+                    DefeatedBossIds.Add(character.GameObjectId);
                 }
             }
         }
@@ -219,26 +224,18 @@ public sealed class Plugin : IDalamudPlugin
     }
 }
 
-// --- UI WINDOW ---
 public class TimerWindow : Window
 {
     private readonly Plugin plugin;
-    private bool showHiddenSelection = false;
-    private Guid? deleteConfirmId = null;
 
     public TimerWindow(Plugin plugin) : base("DutySpeed Timer###DutySpeedMain")
     {
         this.plugin = plugin;
-
-        // Ensure manual resizing is allowed
-        this.Flags = ImGuiWindowFlags.None;
-
         this.SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(250, 160),
             MaximumSize = new Vector2(1000, 1000)
         };
-
         this.Size = new Vector2(300, 220);
         this.SizeCondition = ImGuiCond.FirstUseEver;
     }
@@ -253,57 +250,14 @@ public class TimerWindow : Window
         }
 
         ImGui.Separator();
-
-        // Anchor to the left (Removed the previous centering math)
-        ImGui.TextDisabled(plugin.IsRunning ? "Active Duty:" : "Status:");
         ImGui.Text(plugin.CurrentDutyName);
 
         var time = plugin.DutyTimer.Elapsed;
-        var timeText = $"{time:mm\\:ss}";
-
         ImGui.SetWindowFontScale(2.0f);
-        ImGui.TextColored(new Vector4(0.4f, 1.0f, 0.4f, 1.0f), timeText);
+        ImGui.TextColored(new Vector4(0.4f, 1.0f, 0.4f, 1.0f), $"{time:mm\\:ss}");
         ImGui.SetWindowFontScale(1.0f);
 
         ImGui.Separator();
-
-        // Stack label above the dropdown for better horizontal space management
-        ImGui.Text("Browse Records:");
-
-        // Dynamically size the combo box to fit window width
-        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 65f);
-        using (var combo = ImRaii.Combo("##HistorySelection", plugin.SelectedHistoryDuty))
-        {
-            if (combo)
-            {
-                var uniqueDuties = plugin.Config.RunHistory
-                    .Select(r => r.Name)
-                    .Distinct()
-                    .Where(name => showHiddenSelection || !plugin.Config.HiddenDuties.Contains(name))
-                    .ToList();
-
-                foreach (var duty in uniqueDuties)
-                {
-                    bool isHidden = plugin.Config.HiddenDuties.Contains(duty);
-                    if (ImGui.Selectable(isHidden ? $"[H] {duty}" : duty, plugin.SelectedHistoryDuty == duty))
-                        plugin.SelectedHistoryDuty = duty;
-                }
-            }
-        }
-
-        if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
-        {
-            ImGui.SameLine();
-            bool currentlyHidden = plugin.Config.HiddenDuties.Contains(plugin.SelectedHistoryDuty);
-            if (ImGui.Button(currentlyHidden ? "Unhide" : "Hide", new Vector2(60, 0)))
-            {
-                if (currentlyHidden) plugin.Config.HiddenDuties.Remove(plugin.SelectedHistoryDuty);
-                else plugin.Config.HiddenDuties.Add(plugin.SelectedHistoryDuty);
-                plugin.Config.Save();
-            }
-        }
-
-        ImGui.Checkbox("Show Hidden", ref showHiddenSelection);
 
         if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
         {
@@ -313,36 +267,14 @@ public class TimerWindow : Window
                 .Take(5)
                 .ToList();
 
-            if (history.Count > 0)
+            foreach (var run in history)
             {
-                ImGui.Spacing();
-                ImGui.TextColored(new Vector4(1, 0.8f, 0.2f, 1), "Top 5 Records:");
-                foreach (var run in history)
+                ImGui.Text($"{run.Time:mm\\:ss} ({run.Date:MM/dd})");
+                if (ImGui.IsItemHovered())
                 {
-                    if (ImGui.Button($"X##{run.Id}"))
+                    using (ImRaii.Tooltip())
                     {
-                        if (deleteConfirmId == run.Id)
-                        {
-                            plugin.Config.RunHistory.RemoveAll(r => r.Id == run.Id);
-                            plugin.Config.Save();
-                            deleteConfirmId = null;
-                        }
-                        else
-                        {
-                            deleteConfirmId = run.Id;
-                        }
-                    }
-
-                    ImGui.SameLine();
-                    ImGui.Text($"{run.Time:mm\\:ss} ({run.Date:MM/dd})");
-
-                    if (ImGui.IsItemHovered())
-                    {
-                        using (ImRaii.Tooltip())
-                        {
-                            ImGui.TextColored(new Vector4(0.4f, 0.8f, 1.0f, 1.0f), "Party Composition:");
-                            foreach (var m in run.Party) ImGui.Text($"[{m.Job}] {m.Name}");
-                        }
+                        foreach (var m in run.Party) ImGui.Text($"[{m.Job}] {m.Name}");
                     }
                 }
             }
