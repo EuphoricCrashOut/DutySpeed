@@ -7,10 +7,10 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<PackageId>DutySpeed</PackageId>
-		<Version>1.7.5</Version>
-		<AssemblyVersion>1.7.5</AssemblyVersion>
-		<FileVersion>1.7.5</FileVersion>
-		<InformationalVersion>1.7.5</InformationalVersion>
+		<Version>1.7.5.1</Version>
+		<AssemblyVersion>1.7.5.1</AssemblyVersion>
+		<FileVersion>1.7.5.1</FileVersion>
+		<InformationalVersion>1.7.5.1</InformationalVersion>
 		<DalamudPluginClass>DutySpeed.Plugin</DalamudPluginClass>
 		<GenerateDalamudManifest>true</GenerateDalamudManifest>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
