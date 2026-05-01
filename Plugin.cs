@@ -10,8 +10,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Configuration;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Game.DutyState; // Essential for IDutyStateEventArgs
-
+using Dalamud.Game.DutyState;
 // Strictly excluding ImGuiNET per User Correction Ledger
 using ImGui = Dalamud.Bindings.ImGui.ImGui;
 
@@ -80,12 +79,10 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw += DrawUI;
         Framework.Update += OnUpdate;
 
-        // Subscribing using the delegate signature verified from your decompiler output
         DutyState.DutyStarted += OnDutyStartedHandler;
         DutyState.DutyCompleted += OnDutyCompletedHandler;
     }
 
-    // Handlers matching: public delegate void DutyStartedDelegate(IDutyStateEventArgs args)
     private void OnDutyStartedHandler(IDutyStateEventArgs args) => StartDuty();
     private void OnDutyCompletedHandler(IDutyStateEventArgs args) => EndDuty();
 
@@ -93,22 +90,16 @@ public sealed class Plugin : IDalamudPlugin
 
     private void DrawUI()
     {
-        if (timerWindow.IsOpen)
-        {
-            timerWindow.Draw();
-        }
+        if (timerWindow.IsOpen) timerWindow.Draw();
     }
 
     private void OnUpdate(IFramework framework)
     {
         if (DutyState.IsDutyStarted)
         {
-            var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
-            if (territory.HasValue)
+            if (CurrentDutyName == "Not in Duty")
             {
-                var name = territory.Value.PlaceName.Value.Name.ToString();
-                CurrentDutyName = name;
-                cachedDutyName = name;
+                UpdateDutyName();
             }
         }
         else
@@ -120,11 +111,22 @@ public sealed class Plugin : IDalamudPlugin
         if (IsRunning) CheckBossDeaths();
     }
 
+    private void UpdateDutyName()
+    {
+        // API 15: Excel sheets return a direct Row object; accessing its PlaceName.Value is correct.
+        var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
+        if (territory.HasValue)
+        {
+            // API 15: PlaceName.Value is no longer nullable in this specific reference chain.
+            var name = territory.Value.PlaceName.Value.Name.ToString();
+            CurrentDutyName = name;
+            cachedDutyName = name;
+        }
+    }
+
     private void StartDuty()
     {
-        var territory = DataManager.GetExcelSheet<Lumina.Excel.Sheets.TerritoryType>()?.GetRow(ClientState.TerritoryType);
-        cachedDutyName = territory?.PlaceName.Value.Name.ToString() ?? "Unknown Duty";
-        CurrentDutyName = cachedDutyName;
+        UpdateDutyName();
         SelectedHistoryDuty = cachedDutyName;
 
         DutyTimer.Restart();
@@ -149,7 +151,6 @@ public sealed class Plugin : IDalamudPlugin
                 Party = GetCurrentParty()
             };
             Config.RunHistory.Add(record);
-            Config.HiddenDuties.Remove(cachedDutyName);
             Config.Save();
             SelectedHistoryDuty = cachedDutyName;
         }
@@ -164,15 +165,19 @@ public sealed class Plugin : IDalamudPlugin
     private List<PartyMember> GetCurrentParty()
     {
         var members = new List<PartyMember>();
-        var localPlayer = ObjectTable.LocalPlayer;
 
-        if (PartyList.Length == 0 && localPlayer != null)
+        // API 15 Fix: LocalPlayer is now strictly on IObjectTable
+        if (PartyList.Length == 0)
         {
-            members.Add(new PartyMember
+            if (ObjectTable.LocalPlayer != null)
             {
-                Name = localPlayer.Name.TextValue,
-                Job = localPlayer.ClassJob.Value.Abbreviation.ToString()
-            });
+                members.Add(new PartyMember
+                {
+                    Name = ObjectTable.LocalPlayer.Name.TextValue,
+                    // API 15 Fix: Removed '?' as ClassJob.Value returns a non-nullable struct
+                    Job = ObjectTable.LocalPlayer.ClassJob.Value.Abbreviation.ToString()
+                });
+            }
         }
         else
         {
@@ -206,7 +211,6 @@ public sealed class Plugin : IDalamudPlugin
     {
         DutyState.DutyStarted -= OnDutyStartedHandler;
         DutyState.DutyCompleted -= OnDutyCompletedHandler;
-
         CommandManager.RemoveHandler("/ds");
         Framework.Update -= OnUpdate;
         PluginInterface.UiBuilder.Draw -= DrawUI;
@@ -218,10 +222,7 @@ public class TimerWindow
     private readonly Plugin plugin;
     public bool IsOpen = false;
 
-    public TimerWindow(Plugin plugin)
-    {
-        this.plugin = plugin;
-    }
+    public TimerWindow(Plugin plugin) => this.plugin = plugin;
 
     public void Draw()
     {
@@ -244,13 +245,29 @@ public class TimerWindow
 
             ImGui.Separator();
 
-            if (!string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
+            // FIX: Restored History Selection Dropdown
+            var distinctDuties = plugin.Config.RunHistory.Select(r => r.Name).Distinct().ToList();
+            if (distinctDuties.Any())
             {
+                if (string.IsNullOrEmpty(plugin.SelectedHistoryDuty))
+                    plugin.SelectedHistoryDuty = distinctDuties.First();
+
+                if (ImGui.BeginCombo("History View", plugin.SelectedHistoryDuty))
+                {
+                    foreach (var duty in distinctDuties)
+                    {
+                        if (ImGui.Selectable(duty, duty == plugin.SelectedHistoryDuty))
+                        {
+                            plugin.SelectedHistoryDuty = duty;
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+
                 var history = plugin.Config.RunHistory
                     .Where(r => r.Name == plugin.SelectedHistoryDuty)
                     .OrderBy(r => r.Time)
-                    .Take(5)
-                    .ToList();
+                    .Take(5);
 
                 foreach (var run in history)
                 {
@@ -263,6 +280,10 @@ public class TimerWindow
                         }
                     }
                 }
+            }
+            else
+            {
+                ImGui.TextDisabled("No runs recorded yet.");
             }
         }
         ImGui.End();
