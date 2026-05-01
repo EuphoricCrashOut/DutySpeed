@@ -3,7 +3,7 @@
     "Author": "EuphoricCrashOut",
     "Name": "DutySpeed",
     "InternalName": "DutySpeed",
-    "AssemblyVersion": "1.7.5.0",
+    "AssemblyVersion": "1.7.5.1",
     "Description": "Automatically tracks your completion time in duties.DutySpeed is a lightweight, automated speedrun timer for Final Fantasy XIV. It helps you track the time it took to complete dungeons, trials, and raids without needing to manually start or stop a stopwatch.",
     "RepoUrl": "https://github.com/EuphoricCrashOut/DutySpeed",
     "Tags": [ "speedrun", "duty", "record", "time" ],
